@@ -1,6 +1,6 @@
 Package: com.crctdd.memtrim
 Name: MemTrim + AutoRecovery
-Version: 0.0.3+autorecovery1
+Version: 0.0.3+autorecovery2
 Architecture: iphoneos-arm64e
 Description: MemTrim 0.0.2 with an unofficial, opt-in recovery-gated automatic deep optimization companion for iOS 15-17 RootHide.
 Maintainer: crctdd; AutoRecovery companion maintained by mowang7426

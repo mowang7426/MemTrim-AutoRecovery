@@ -12,22 +12,36 @@ bootout_label() {
   [ "$domain" = user/foreground ] && "$launchctl" bootout "user/foreground/$label" 2>/dev/null || true
   "$launchctl" bootout "system/$label" 2>/dev/null || true
 }
-bootout_label com.crctdd.memtrim.autorecovery
-bootout_label com.crctdd.memtrim.daemon
 runtime="$prefix/var/mobile/Library/MemTrim"
 mkdir -p "$runtime"
 chown 501:501 "$runtime"
 chmod 700 "$runtime"
+# Validate both executables before stopping an already-running original daemon.
 "$prefix/usr/libexec/memtrimd" --configure
-"$prefix/usr/libexec/memtrim-autorecovery" --configure
-for label in com.crctdd.memtrim.daemon com.crctdd.memtrim.autorecovery; do
-  plist="$prefix/Library/LaunchDaemons/$label.plist"
-  chmod 644 "$plist"
-  "$launchctl" bootstrap "$domain" "$plist"
-  if ! "$launchctl" print "$domain/$label" >/dev/null; then
-    echo "MemTrim: $label was not registered in $domain" >&2
-    exit 1
+addon_ready=1
+if ! "$prefix/usr/libexec/memtrim-autorecovery" --configure; then
+  addon_ready=0
+  echo 'MemTrim: automatic companion unavailable; original service will still start.' >&2
+fi
+bootout_label com.crctdd.memtrim.autorecovery
+bootout_label com.crctdd.memtrim.daemon
+original_plist="$prefix/Library/LaunchDaemons/com.crctdd.memtrim.daemon.plist"
+chmod 644 "$original_plist"
+"$launchctl" bootstrap "$domain" "$original_plist"
+if ! "$launchctl" print "$domain/com.crctdd.memtrim.daemon" >/dev/null; then
+  echo 'MemTrim: original daemon was not registered.' >&2
+  exit 1
+fi
+"$launchctl" kickstart "$domain/com.crctdd.memtrim.daemon"
+if [ "$addon_ready" -eq 1 ]; then
+  addon_plist="$prefix/Library/LaunchDaemons/com.crctdd.memtrim.autorecovery.plist"
+  chmod 644 "$addon_plist"
+  if ! "$launchctl" bootstrap "$domain" "$addon_plist" ||
+     ! "$launchctl" print "$domain/com.crctdd.memtrim.autorecovery" >/dev/null; then
+    echo 'MemTrim: automatic companion could not register; disabled, check status in Settings.' >&2
+  else
+    "$launchctl" kickstart "$domain/com.crctdd.memtrim.autorecovery" ||
+      echo 'MemTrim: companion failed to start; check status in Settings.' >&2
   fi
-  "$launchctl" kickstart "$domain/$label"
-done
+fi
 # No respring, foreground app launch, or optimization request is forced here.

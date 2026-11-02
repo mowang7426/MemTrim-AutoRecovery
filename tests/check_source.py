@@ -12,7 +12,15 @@ for f in p.rglob('*.plist'):
 for name in ['postinst','prerm']:
  f=p/'layout/DEBIAN'/name
  subprocess.run(['sh','-n',str(f)],check=True)
- assert f.stat().st_mode&0o111,name
+ assert f.read_bytes().startswith(b'#!/bin/sh'),name
+ent=plistlib.loads((p/'entitlements.plist').read_bytes())
+assert all(ent.get(k) is True for k in (
+ 'platform-application','com.apple.private.memorystatus',
+ 'com.apple.private.security.no-sandbox',
+ 'com.apple.private.security.storage.AppBundles',
+ 'com.apple.private.security.storage.AppDataContainers'))
+script=(p/'layout/DEBIAN/postinst').read_text()
+assert script.index('"$prefix/usr/libexec/memtrim-autorecovery" --configure') < script.index('bootout_label com.crctdd.memtrim.daemon')
 launch=plistlib.loads((p/'layout/Library/LaunchDaemons/com.crctdd.memtrim.autorecovery.plist').read_bytes())
 assert launch['UserName']=='root' and launch['GroupName']=='wheel'
 assert launch['ProgramArguments']==['/usr/libexec/memtrim-autorecovery']

@@ -48,3 +48,8 @@ python3 tests/check_package.py packages/*.deb
 
 使用 RootHide Theos + iPhoneOS 16.5 SDK；附加二进制同时编译 arm64/arm64e。工作流仅 feature 分支和手动触发，上传 Actions artifact，不自动创建 Release。
 验包验证原负载 SHA-256 不变、布局/设置/依赖及全部 Mach-O slice 的 CodeDirectory 代码页散列。不是完整签名信任链验证，也不是越狱 entitlement 授权或真机性能验证。
+
+## 从 autorecovery1 安装失败恢复
+旧测试包 `0.0.3+autorecovery1` 的新增守护程序空权限签名导致 RootHide 动态库加载被拒，`postinst` 返回 134，dpkg 留在未配置状态，Sileo 每次刷新都会提示“Dpkg 被中断”并提供移除队列。不要重复安装该旧包。
+新版 `0.0.3+autorecovery2` 为新增守护进程签入与原 MemTrim 相同的 RootHide 基础权限，并在新增组件不可用时保持原版服务可启动，不因可选组件错误让包处于未配置状态；这仍未取代设备实测。
+旧包若处于 `iF`/未配置状态，请在越狱终端用**新版 deb 的实际绝对路径**安装：`dpkg -i /实际路径/com.crctdd.memtrim_0.0.3+autorecovery2_iphoneos-arm64e.deb`。成功后检查 `dpkg --audit` 是否空、`dpkg -s com.crctdd.memtrim` 为 `Status: install ok installed`，Sileo 的移除队列应清除，必要时点“清除队列”但不要点确认移除。若仍无法配置，可先卸载失败包再装回已备份的原版 0.0.2；不要运行 `dpkg --configure -a` 去反复配置旧版。

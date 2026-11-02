@@ -27,7 +27,7 @@ ui=plistlib.loads(files['Library/PreferenceBundles/MemTrimAutoRecoveryPrefs.bund
 assert isinstance(ui,dict) and isinstance(ui['items'],list)
 assert next(x for x in ui['items'] if x['cell']=='PSSwitchCell')['default'] is False
 for n in files: assert not n.startswith(('LaunchDaemons/','MobileSubstrate/','PreferenceBundles/','var/jb/'))
-def codecheck(b):
+def codecheck(b,require_entitlements=False):
  assert struct.unpack_from('<I',b)[0]==0xfeedfacf
  cpu,sub=struct.unpack_from('<II',b,4); assert cpu==0x100000c
  nc=struct.unpack_from('<I',b,16)[0]; off=32; sig=None
@@ -38,6 +38,19 @@ def codecheck(b):
  assert sig,'unsigned Mach-O'
  start,n=sig; s=b[start:start+n]; magic,length,count=struct.unpack_from('>III',s)
  assert magic==0xfade0cc0 and length<=len(s)
+ if require_entitlements:
+  needed=('platform-application','com.apple.private.memorystatus',
+          'com.apple.private.security.no-sandbox',
+          'com.apple.private.security.storage.AppBundles',
+          'com.apple.private.security.storage.AppDataContainers')
+  xml=None
+  for i in range(count):
+   typ,at=struct.unpack_from('>II',s,12+8*i)
+   if typ!=5: continue
+   m,k=struct.unpack_from('>II',s,at)
+   assert m==0xfade7171 and 8<k<=len(s)-at,'invalid XML entitlement blob'
+   xml=plistlib.loads(s[at+8:at+k])
+  assert isinstance(xml,dict) and all(xml.get(x) is True for x in needed), 'RootHide daemon entitlements missing'
  checked=0
  for i in range(count):
   typ,at=struct.unpack_from('>II',s,12+8*i)
@@ -67,7 +80,7 @@ for name,b in files.items():
   for i in range(n):
    cpu,sub,off,size,align=struct.unpack_from('>5I',b,8+i*20); slices.append(b[off:off+size])
  if slices:
-  verified=[codecheck(x) for x in slices]; count+=len(slices)
+  verified=[codecheck(x,name=='usr/libexec/memtrim-autorecovery') for x in slices]; count+=len(slices)
   print('PASS Mach-O code pages:',name,verified)
 print('PASS:',len(files),'files;',count,'Mach-O slices; all original payload bytes preserved')
 print('SHA256',hashlib.sha256(data).hexdigest(),p.name)
