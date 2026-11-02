@@ -19,7 +19,13 @@ for name,digest in json.loads((root/'tests/original-sha256.json').read_text()).i
  assert name in files,'missing original '+name
  assert hashlib.sha256(files[name]).hexdigest()==digest,'changed original '+name
 required=['usr/libexec/memtrim-autorecovery','Library/PreferenceBundles/MemTrimAutoRecoveryPrefs.bundle/MemTrimAutoRecoveryPrefs','Library/PreferenceBundles/MemTrimAutoRecoveryPrefs.bundle/Root.plist','Library/LaunchDaemons/com.crctdd.memtrim.autorecovery.plist','Library/PreferenceLoader/Preferences/MemTrimAutoRecovery.plist']
+required.append('Library/PreferenceBundles/MemTrimAutoRecoveryPrefs.bundle/Info.plist')
 for n in required: assert n in files,n
+info=plistlib.loads(files['Library/PreferenceBundles/MemTrimAutoRecoveryPrefs.bundle/Info.plist'])
+assert info['CFBundleExecutable']=='MemTrimAutoRecoveryPrefs' and info['NSPrincipalClass']=='MTARootListController'
+ui=plistlib.loads(files['Library/PreferenceBundles/MemTrimAutoRecoveryPrefs.bundle/Root.plist'])
+assert isinstance(ui,dict) and isinstance(ui['items'],list)
+assert next(x for x in ui['items'] if x['cell']=='PSSwitchCell')['default'] is False
 for n in files: assert not n.startswith(('LaunchDaemons/','MobileSubstrate/','PreferenceBundles/','var/jb/'))
 def codecheck(b):
  assert struct.unpack_from('<I',b)[0]==0xfeedfacf

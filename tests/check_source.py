@@ -16,7 +16,9 @@ for name in ['postinst','prerm']:
 launch=plistlib.loads((p/'layout/Library/LaunchDaemons/com.crctdd.memtrim.autorecovery.plist').read_bytes())
 assert launch['UserName']=='root' and launch['GroupName']=='wheel'
 assert launch['ProgramArguments']==['/usr/libexec/memtrim-autorecovery']
-items=plistlib.loads((p/'Prefs/Resources/Root.plist').read_bytes())
+items=plistlib.loads((p/'Prefs/Resources/Root.plist').read_bytes())['items']
+info=plistlib.loads((p/'Prefs/Resources/Info.plist').read_bytes())
+assert info['NSPrincipalClass']=='MTARootListController'
 switch=[x for x in items if x['cell']=='PSSwitchCell'][0]
 assert switch['default'] is False and switch['defaults']=='com.local.memtrim.autorecovery'
 main=(p/'AutoRecovery/main.m').read_text()

@@ -46,7 +46,10 @@ static bool MTARPersist(double wall) {
     if(ok) {
         int dir=open(MTARRuntimePath().fileSystemRepresentation,O_RDONLY|O_CLOEXEC);
         if(dir<0) return false;
-        ok=fsync(dir)==0; close(dir);
+        // Some filesystems do not support directory fsync. The file was synced
+        // before atomic rename; a power loss still forces a fresh boot cooldown.
+        int rc=fsync(dir), saved=errno; close(dir);
+        ok=rc==0 || saved==EINVAL || saved==ENOTSUP;
     }
     if(ok) MTARWallUntil=wall+MTAR_COOLDOWN;
     return ok;
