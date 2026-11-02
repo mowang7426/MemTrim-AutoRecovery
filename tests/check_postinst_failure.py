@@ -18,7 +18,9 @@ with tempfile.TemporaryDirectory() as d:
   (root/'Library/LaunchDaemons'/f'{label}.plist').touch()
  script=root/'postinst'
  # Mock both absolute paths and runtime directory, no calls to installed system.
- script.write_text(src.replace("prefix=''",f"prefix='{root}'").replace("launchctl='/bin/launchctl'",f"launchctl='{launch}'"))
+ script.write_text(src.replace("prefix=''",f"prefix='{root}'")
+   .replace("launchctl='/bin/launchctl'",f"launchctl='{launch}'")
+   .replace('chown 501:501 "$runtime"', ': "$runtime" # ownership simulated on unprivileged CI runner'))
  proc=subprocess.run(['sh',str(script),'configure'],capture_output=True,text=True)
  assert proc.returncode==0,(proc.returncode,proc.stderr)
  calls=log.read_text().splitlines()
