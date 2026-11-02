@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>zh_CN</string>
+	<key>CFBundleExecutable</key>
+	<string>MemTrimAutoRecoveryPrefs</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.crctdd.memtrim.autorecovery.prefs</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>MemTrimAutoRecoveryPrefs</string>
+	<key>CFBundlePackageType</key>
+	<string>BNDL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.0.3</string>
+	<key>CFBundleVersion</key>
+	<string>0.0.3</string>
+	<key>NSPrincipalClass</key>
+	<string>MTARootListController</string>
+</dict>
+</plist>

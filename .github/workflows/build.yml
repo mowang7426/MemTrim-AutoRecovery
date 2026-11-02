@@ -1,0 +1,40 @@
+name: Build MemTrim AutoRecovery
+on:
+  push:
+    branches: ['feature/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      THEOS: /tmp/theos
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test deterministic policy and source layout
+        run: |
+          cc -std=c11 -Wall -Wextra -Werror tests/policy.c -lm -o /tmp/mtar-policy-test
+          /tmp/mtar-policy-test
+          python3 tests/check_source.py
+      - name: Install build tools
+        run: brew install ldid xz
+      - name: Prepare RootHide Theos and SDK
+        run: |
+          git clone --recursive --depth 1 https://github.com/roothide/theos.git "$THEOS"
+          git clone --depth 1 https://github.com/theos/sdks.git /tmp/theos-sdks
+          cp -R /tmp/theos-sdks/iPhoneOS16.5.sdk "$THEOS/sdks/"
+          { git -C "$THEOS" rev-parse HEAD; git -C /tmp/theos-sdks rev-parse HEAD; xcodebuild -version; } > toolchain.txt
+      - name: Compile RootHide package
+        run: make package FINALPACKAGE=1 DEBUG=0 THEOS_PACKAGE_SCHEME=roothide
+      - name: Verify package and Mach-O code pages
+        run: python3 tests/check_package.py packages/*.deb | tee package-check.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MemTrim-AutoRecovery-RootHide
+          path: |
+            packages/*.deb
+            package-check.txt
+            toolchain.txt
+          if-no-files-found: error

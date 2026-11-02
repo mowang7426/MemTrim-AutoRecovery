@@ -1,0 +1,14 @@
+{
+  "Library/LaunchDaemons/com.crctdd.memtrim.daemon.plist": "7bb6087cd2b2c07ebaa10cff435b20e6aa922e752a714fd9e24d7411c5b05eff",
+  "Library/MobileSubstrate/DynamicLibraries/MemTrimURL.dylib": "971c4245ce2d2d26b2640b8820c6ba6bf46bb34971b84cebbb28ed1568c516ab",
+  "Library/MobileSubstrate/DynamicLibraries/MemTrimURL.plist": "c74e08d720077df4ece127b30dc22426d3c524d4718dee5d4d18976cad1f18c4",
+  "Library/MobileSubstrate/DynamicLibraries/MemTrimClient.dylib": "380d9b82bacfabf9f93c0cf03ecbb5b8551a4c7cc4bf9842c1140dcd03c05dcb",
+  "Library/MobileSubstrate/DynamicLibraries/MemTrimClient.plist": "023eb9e22181a840bc7ead9806b70b33e6ebb5822adb1ffe5afda3873459c35b",
+  "Library/PreferenceLoader/Preferences/MemTrim.plist": "74cd7623667c4669f272aaa51f9961e561f10710483169b08cc3513811227f14",
+  "Library/PreferenceBundles/MemTrimPrefs.bundle/icon.png": "6d49d10cfde869c96dbabba7e9b3e6a68b1ca64ba351d021eb3b24c2c536dbf8",
+  "Library/PreferenceBundles/MemTrimPrefs.bundle/icon@2x.png": "8edf704401f43a669722439505ed54a811eb52369633b9748c64ae3d84942dce",
+  "Library/PreferenceBundles/MemTrimPrefs.bundle/Info.plist": "cf1c81dcd0a32c53c8f7dd6c6482440a72efe6c778587bf319921987ca82bede",
+  "Library/PreferenceBundles/MemTrimPrefs.bundle/icon@3x.png": "3ca440735d7813e5ca99be5250d536ff53a22a9baa943bfcd0670ec6c4c88c82",
+  "Library/PreferenceBundles/MemTrimPrefs.bundle/MemTrimPrefs": "ac6d5ecc4ed268ba51804c61ecede84364f2c82c381c85d2b402758ef6afdf14",
+  "usr/libexec/memtrimd": "c85fb2ae652f54305a4e6f83444ca614f5eb9cbb0139acc116a79c54875735e8"
+}

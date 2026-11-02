@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+case "${1:-}" in remove|upgrade|deconfigure) ;; *) exit 0 ;; esac
+launchctl='/bin/launchctl'
+[ -x /bin/launchctl ] || launchctl='/usr/bin/launchctl'
+domain='system'
+if "$launchctl" print user/foreground >/dev/null 2>&1; then domain='user/foreground'; fi
+for label in com.crctdd.memtrim.autorecovery com.crctdd.memtrim.daemon; do
+  [ "$domain" = user/foreground ] && "$launchctl" bootout "user/foreground/$label" 2>/dev/null || true
+  "$launchctl" bootout "system/$label" 2>/dev/null || true
+done
+exit 0

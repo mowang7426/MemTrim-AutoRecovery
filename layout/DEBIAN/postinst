@@ -1,0 +1,33 @@
+#!/bin/sh
+set -eu
+case "${1:-}" in configure) ;; *) exit 0 ;; esac
+prefix=''
+launchctl='/bin/launchctl'
+[ -x "$prefix/bin/launchctl" ] && launchctl="$prefix/bin/launchctl"
+[ -x "$prefix/usr/bin/launchctl" ] && launchctl="$prefix/usr/bin/launchctl"
+domain='system'
+if "$launchctl" print user/foreground >/dev/null 2>&1; then domain='user/foreground'; fi
+bootout_label() {
+  label="$1"
+  [ "$domain" = user/foreground ] && "$launchctl" bootout "user/foreground/$label" 2>/dev/null || true
+  "$launchctl" bootout "system/$label" 2>/dev/null || true
+}
+bootout_label com.crctdd.memtrim.autorecovery
+bootout_label com.crctdd.memtrim.daemon
+runtime="$prefix/var/mobile/Library/MemTrim"
+mkdir -p "$runtime"
+chown 501:501 "$runtime"
+chmod 700 "$runtime"
+"$prefix/usr/libexec/memtrimd" --configure
+"$prefix/usr/libexec/memtrim-autorecovery" --configure
+for label in com.crctdd.memtrim.daemon com.crctdd.memtrim.autorecovery; do
+  plist="$prefix/Library/LaunchDaemons/$label.plist"
+  chmod 644 "$plist"
+  "$launchctl" bootstrap "$domain" "$plist"
+  if ! "$launchctl" print "$domain/$label" >/dev/null; then
+    echo "MemTrim: $label was not registered in $domain" >&2
+    exit 1
+  fi
+  "$launchctl" kickstart "$domain/$label"
+done
+# No respring, foreground app launch, or optimization request is forced here.
