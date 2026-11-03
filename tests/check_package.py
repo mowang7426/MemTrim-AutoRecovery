@@ -26,6 +26,8 @@ assert info['CFBundleExecutable']=='MemTrimAutoRecoveryPrefs' and info['NSPrinci
 ui=plistlib.loads(files['Library/PreferenceBundles/MemTrimAutoRecoveryPrefs.bundle/Root.plist'])
 assert isinstance(ui,dict) and isinstance(ui['items'],list)
 assert next(x for x in ui['items'] if x['cell']=='PSSwitchCell')['default'] is False
+slider=next(x for x in ui['items'] if x['cell']=='PSSliderCell')
+assert (slider['key'],slider['min'],slider['max'],slider['default'])==('CooldownMinutes',5,120,15)
 for n in files: assert not n.startswith(('LaunchDaemons/','MobileSubstrate/','PreferenceBundles/','var/jb/'))
 def codecheck(b,require_entitlements=False):
  assert struct.unpack_from('<I',b)[0]==0xfeedfacf

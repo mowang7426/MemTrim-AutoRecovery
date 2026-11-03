@@ -12,7 +12,7 @@
 			<key>label</key>
 			<string>自动深度优化（非官方附加功能）</string>
 			<key>footerText</key>
-			<string>检测到持续内存压力时仅作标记；压力恢复正常且系统空闲内存连续满足条件 20 秒后，才请求一次原版深度优化。每次请求后冷却 15 分钟。深度优化本质上会主动制造内存压力，仍可能导致后台应用重载。</string>
+			<string>自动深度优化会主动制造内存压力，可能导致后台应用重载。可在「MemTrim 自动恢复」页使用滑块设置 **5–120 分钟冷却**（默认 15 分钟、按分钟步进）。为防止原深度优化反复制造内存压力，最短保留 5 分钟，不提供关闭冷却。正在进行的冷却不会因将设置调短而提前结束，新设置从之后的冷却周期和下一次守护程序启动生效。</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -27,6 +27,26 @@
 			<false/>
 			<key>PostNotification</key>
 			<string>com.local.memtrim.autorecovery.changed</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>label</key>
+			<string>冷却时间（分钟）</string>
+			<key>key</key>
+			<string>CooldownMinutes</string>
+			<key>defaults</key>
+			<string>com.local.memtrim.autorecovery</string>
+			<key>default</key>
+			<integer>15</integer>
+			<key>min</key>
+			<integer>5</integer>
+			<key>max</key>
+			<integer>120</integer>
+			<key>showValue</key>
+			<true/>
+			<key>isContinuous</key>
+			<false/>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -48,7 +68,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>冷启动或守护程序重启后也等待 15 分钟。持续压力观察 8 秒；恢复后系统空闲页需达到 max(128 MiB, 物理内存 3%)，连续稳定 20 秒。请求最迟 30 分钟过期。原 MemTrim 总开关必须开启。仅为实验版，尚无真机兼容保证。</string>
+			<string>默认冷却 15 分钟，可设置 5–120 分钟（每分钟步进）；已开始的冷却不会因调短而立即提前结束。持续压力观察约 8 秒；压力恢复正常且系统空闲页达到 max(128 MiB, 物理内存 3%) 后，还需连续稳定 20 秒。守护程序启动/重启时按当前设置开始冷却。</string>
 		</dict>
 	</array>
 </dict>

@@ -2,7 +2,8 @@
 #define MTAR_POLICY_H
 #include <stdbool.h>
 #include <math.h>
-#define MTAR_COOLDOWN 900.0
+// Callers load this from the validated user preference (minimum five minutes).
+static double MTARCooldownSeconds=900.0;
 #define MTAR_CONFIRM 8.0
 #define MTAR_STABLE 20.0
 #define MTAR_TTL 1800.0
@@ -10,15 +11,15 @@
 typedef struct { double low, pending, stable, until, last; } MTARPolicy;
 static inline void MTARReset(MTARPolicy *p) { p->low=p->pending=p->stable=-1; }
 static inline void MTARInit(MTARPolicy *p,double now) {
-    *p=(MTARPolicy){.until=now+MTAR_COOLDOWN,.last=now}; MTARReset(p);
+    *p=(MTARPolicy){.until=now+MTARCooldownSeconds,.last=now}; MTARReset(p);
 }
 static inline void MTARSuppress(MTARPolicy *p,double now) {
-    p->until=fmax(p->until,now+MTAR_COOLDOWN); MTARReset(p);
+    p->until=fmax(p->until,now+MTARCooldownSeconds); MTARReset(p);
 }
 static inline bool MTARStep(MTARPolicy *p,double now,bool enabled,bool valid,
                             int pressure,bool room,bool idle,bool activity) {
     if(!isfinite(now)||now<0) { MTARReset(p); return false; }
-    if(now<p->last) { p->until=now+MTAR_COOLDOWN; MTARReset(p); }
+    if(now<p->last) { p->until=now+MTARCooldownSeconds; MTARReset(p); }
     if(now-p->last>5) MTARReset(p); // sleep or delayed polling is not observed stability
     p->last=now;
     if(activity||!idle) MTARSuppress(p,now);

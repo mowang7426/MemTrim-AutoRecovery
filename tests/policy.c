@@ -7,7 +7,7 @@ static int sends;
 static bool step(bool enabled,bool valid,int pressure,bool room,bool idle,bool act) {
     t+=2; bool r=MTARStep(&p,t,enabled,valid,pressure,room,idle,act); sends+=r; return r;
 }
-static void reset(void) { t=100; sends=0; MTARInit(&p,t); }
+static void reset(void) { t=100; sends=0; MTARCooldownSeconds=900.0; MTARInit(&p,t); }
 static void warm(void) { for(int i=0;i<451;i++) assert(!step(true,true,1,true,true,false)); }
 static void low(void) { for(int i=0;i<6;i++) assert(!step(true,true,2,false,true,false)); }
 static void recovery(void) { for(int i=0;i<11;i++) step(true,true,1,true,true,false); }
@@ -37,5 +37,10 @@ int main(void) {
  reset(); warm(); low(); assert(!MTARStep(&p,NAN,true,true,1,true,true,false)); recovery(); assert(sends==0);
  // Each failure after admission still consumes the cooldown (no post retry loop).
  reset(); warm(); low(); recovery(); assert(sends==1); warm(); recovery(); assert(sends==1); low(); recovery(); assert(sends==2);
- puts("PASS: 21 policy scenarios, no real memory pressure generated");
+ // Configurable cooldown is honored across boot initialization and activity suppression.
+ MTARCooldownSeconds=300.0; t=100; MTARInit(&p,t); assert(p.until==400.0);
+ MTARSuppress(&p,200.0); assert(p.until==500.0);
+ MTARCooldownSeconds=7200.0; MTARSuppress(&p,600.0); assert(p.until==7800.0);
+ MTARCooldownSeconds=900.0;
+ puts("PASS: 21 policy scenarios plus custom 5/120-minute cooldown timing");
 }

@@ -31,6 +31,10 @@ static void MTARReload(void) {
     id data=[NSDictionary dictionaryWithContentsOfFile:MTARPrefsPath()];
     id value=[data isKindOfClass:NSDictionary.class] ? data[@"Enabled"] : nil;
     MTAREnabled=[value isKindOfClass:NSNumber.class] && [value boolValue];
+    id configured=[data isKindOfClass:NSDictionary.class] ? data[@"CooldownMinutes"] : nil;
+    NSInteger minutes=[configured respondsToSelector:@selector(integerValue)]?[configured integerValue]:15;
+    minutes=MIN(120,MAX(5,minutes));
+    MTARCooldownSeconds=(double)minutes*60.0;
     MTARReset(&MTARPolicyState);
 }
 static bool MTARPersist(double wall) {
@@ -38,7 +42,7 @@ static bool MTARPersist(double wall) {
     NSString *tmp=[path stringByAppendingFormat:@".%d.tmp",getpid()];
     int fd=open(tmp.fileSystemRepresentation,O_WRONLY|O_CREAT|O_TRUNC|O_NOFOLLOW|O_CLOEXEC,0600);
     if(fd<0) return false;
-    char b[80]; int n=snprintf(b,sizeof(b),"%.3f\n",wall+MTAR_COOLDOWN);
+    char b[80]; int n=snprintf(b,sizeof(b),"%.3f\n",wall+MTARCooldownSeconds);
     bool ok=write(fd,b,(size_t)n)==n && fsync(fd)==0;
     close(fd);
     if(ok) ok=rename(tmp.fileSystemRepresentation,path.fileSystemRepresentation)==0;
@@ -51,7 +55,7 @@ static bool MTARPersist(double wall) {
         int rc=fsync(dir), saved=errno; close(dir);
         ok=rc==0 || saved==EINVAL || saved==ENOTSUP;
     }
-    if(ok) MTARWallUntil=wall+MTAR_COOLDOWN;
+    if(ok) MTARWallUntil=wall+MTARCooldownSeconds;
     return ok;
 }
 static void MTARPublish(unsigned code) {
@@ -113,7 +117,7 @@ static void MTARTick(void) {
         // Never learn a new low-memory episode from a manual or automatic worker.
         if(alive && (activity||!idle)) {
             MTARSuppress(&MTARPolicyState,now);
-            if(MTARWallUntil<wall+MTAR_COOLDOWN-10) MTARReady=MTARPersist(wall);
+            if(MTARWallUntil<wall+MTARCooldownSeconds-10) MTARReady=MTARPersist(wall);
         }
         bool cooldown=now<MTARPolicyState.until || wall<MTARWallUntil;
         bool ready=MTARStep(&MTARPolicyState,now,MTAREnabled,
@@ -164,11 +168,11 @@ int main(int argc,char **argv) {
         NSString *lockPath=[MTARRuntimePath() stringByAppendingPathComponent:@"lock"];
         int lock=open(lockPath.fileSystemRepresentation,O_RDWR|O_CREAT|O_NOFOLLOW|O_CLOEXEC,0600);
         if(lock<0||flock(lock,LOCK_EX|LOCK_NB)!=0) return 75;
-        MTARInit(&MTARPolicyState,now);
-        // Always restart with a fresh 15-minute guard, even after missing/corrupt state
-        // or a wall-clock jump. No pending episode survives a daemon restart.
-        MTARReady=MTARPersist(time(NULL));
         MTARReload();
+        MTARInit(&MTARPolicyState,now);
+        // Every daemon start applies the currently selected 5-120 minute guard,
+        // even if the prior cooldown record was missing or corrupt.
+        MTARReady=MTARPersist(time(NULL));
         MTARHost=mach_host_self(); host_page_size(MTARHost,&MTARPageSize);
         MTARRAM=NSProcessInfo.processInfo.physicalMemory;
         notify_register_check(MTAR_STATUS,&MTARStatusToken);
