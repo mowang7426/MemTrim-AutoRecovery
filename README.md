@@ -51,5 +51,5 @@ python3 tests/check_package.py packages/*.deb
 
 ## 从 autorecovery1 安装失败恢复
 旧测试包 `0.0.3+autorecovery1` 的新增守护程序空权限签名导致 RootHide 动态库加载被拒，`postinst` 返回 134，dpkg 留在未配置状态，Sileo 每次刷新都会提示“Dpkg 被中断”并提供移除队列。不要重复安装该旧包。
-新版 `0.0.3+autorecovery2` 为新增守护进程签入与原 MemTrim 相同的 RootHide 基础权限，并在新增组件不可用时保持原版服务可启动，不因可选组件错误让包处于未配置状态；这仍未取代设备实测。
-旧包若处于 `iF`/未配置状态，请在越狱终端用**新版 deb 的实际绝对路径**安装：`dpkg -i /实际路径/com.crctdd.memtrim_0.0.3+autorecovery2_iphoneos-arm64e.deb`。成功后检查 `dpkg --audit` 是否空、`dpkg -s com.crctdd.memtrim` 为 `Status: install ok installed`，Sileo 的移除队列应清除，必要时点“清除队列”但不要点确认移除。若仍无法配置，可先卸载失败包再装回已备份的原版 0.0.2；不要运行 `dpkg --configure -a` 去反复配置旧版。
+本包 `0.0.3+autorecovery2` 修复了 RootHide 基础签名权限及可选组件安装失败时的 dpkg 中断问题。后续 `0.0.3+autorecovery3` 在保留该修复的基础上增加冷却时间滑块；恢复安装时优先使用最新版 `autorecovery3`。
+如果仍未配置，请以 root 用最新版 `dpkg -i /实际路径/com.crctdd.memtrim_0.0.3+autorecovery3_iphoneos-arm64e.deb`。成功后检查 `dpkg --audit` 是否为空及 `dpkg -s com.crctdd.memtrim` 中 Status 是否为 `install ok installed`，再回 Sileo 清理旧队列，勿确认移除。若仍失败，发完整终端输出并回退原版 0.0.2。
